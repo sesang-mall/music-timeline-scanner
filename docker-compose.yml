@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "3102:3102"
+    environment:
+      - BACKEND_PORT=3102
+    volumes:
+      - ./timeline_extractor_backend.py:/app/timeline_extractor_backend.py
+    command: python timeline_extractor_backend.py
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3102/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3100:3100"
+    environment:
+      - FRONTEND_PORT=3100
+    depends_on:
+      - backend
+    command: npm run dev
+
+volumes:
+  uploads:
