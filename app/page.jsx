@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { Music, Download, FolderOpen, AlertCircle, CheckCircle2, Clock, Repeat2, Sun, Moon } from 'lucide-react';
 
-const API = 'http://localhost:3102';
+// 개발: NEXT_PUBLIC_API_URL=http://localhost:3102 (.env.local)
+// 정적빌드: 빈 문자열 → 같은 서버로 요청
+const API = process.env.NEXT_PUBLIC_API_URL || '';
 const FPS = 30;
 
 function fmtTime(sec) {

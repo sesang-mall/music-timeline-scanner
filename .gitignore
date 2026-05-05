@@ -11,6 +11,9 @@ node_modules/
 .next/
 out/
 
+# Local env (contains dev-only settings)
+.env.local
+
 # Environment
 .env
 .env.local

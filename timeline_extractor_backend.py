@@ -1,9 +1,12 @@
 from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import mutagen
 from pathlib import Path
 import os
+import threading
+import webbrowser
 from dotenv import load_dotenv
 import tkinter as tk
 from tkinter import filedialog
@@ -139,7 +142,32 @@ def browse_folder():
 def health_check():
     return {"status": "ok"}
 
+# ── 정적 빌드 서빙 (npm run build 후 out/ 폴더가 있을 때) ──
+OUT_DIR = Path(__file__).parent / "out"
+if OUT_DIR.exists():
+    # Next.js 정적 에셋 (_next/)
+    _next_dir = OUT_DIR / "_next"
+    if _next_dir.exists():
+        app.mount("/_next", StaticFiles(directory=str(_next_dir)), name="nextjs-assets")
+
+    # 루트 → index.html
+    @app.get("/")
+    def serve_index():
+        return FileResponse(str(OUT_DIR / "index.html"))
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("BACKEND_PORT", 3102))
+
+    # out/ 폴더가 있으면 브라우저 자동 오픈 (정적 빌드 모드)
+    if OUT_DIR.exists():
+        def _open_browser():
+            import time
+            time.sleep(1.5)
+            webbrowser.open(f"http://localhost:{port}")
+        threading.Thread(target=_open_browser, daemon=True).start()
+        print(f"\n✅ 정적 빌드 모드 — http://localhost:{port} 에서 실행 중\n")
+    else:
+        print(f"\n⚠️  개발 모드 — 프론트엔드를 별도로 실행하세요 (npm run dev)\n")
+
     uvicorn.run(app, host="0.0.0.0", port=port)
