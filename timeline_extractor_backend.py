@@ -5,6 +5,8 @@ from fastapi.staticfiles import StaticFiles
 import mutagen
 from pathlib import Path
 import os
+import subprocess
+import json
 import threading
 import webbrowser
 from dotenv import load_dotenv
@@ -23,14 +25,37 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-SUPPORTED_FORMATS = {'.mp3', '.wav', '.m4a', '.flac', '.aac', '.ogg', '.wma'}
+SUPPORTED_FORMATS = {
+    # 음악
+    '.mp3', '.wav', '.m4a', '.flac', '.aac', '.ogg', '.wma',
+    # 영상
+    '.mp4', '.mkv', '.avi', '.mov', '.wmv', '.webm', '.m4v',
+}
+
+def _get_duration_ffprobe(file_path: str) -> float:
+    """ffprobe로 미디어 길이 반환 — mutagen이 실패한 포맷(mkv, avi 등)에 사용"""
+    result = subprocess.run(
+        ['ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_format', file_path],
+        capture_output=True, text=True, timeout=30,
+    )
+    if result.returncode != 0:
+        raise ValueError(f"ffprobe 오류 (ffmpeg 설치 필요): {result.stderr.strip()}")
+    info = json.loads(result.stdout)
+    duration = info.get('format', {}).get('duration')
+    if duration is None:
+        raise ValueError("ffprobe에서 duration 정보를 찾을 수 없음")
+    return float(duration)
 
 def get_duration(file_path: str) -> float:
-    """mutagen으로 정확한 오디오 길이 반환 (단위: 초, float)"""
-    audio = mutagen.File(file_path)
-    if audio is None or not hasattr(audio, 'info') or not hasattr(audio.info, 'length'):
-        raise ValueError(f"지원하지 않는 형식이거나 duration을 읽을 수 없음: {file_path}")
-    return float(audio.info.length)
+    """음악·영상 파일 길이 반환 (초). mutagen 우선, 실패 시 ffprobe 폴백."""
+    try:
+        audio = mutagen.File(file_path)
+        if audio is not None and hasattr(audio, 'info') and hasattr(audio.info, 'length'):
+            return float(audio.info.length)
+    except Exception:
+        pass
+    # mkv, avi, mov, wmv, webm 등 mutagen 미지원 포맷
+    return _get_duration_ffprobe(file_path)
 
 def format_time(seconds: float) -> str:
     hours = int(seconds // 3600)
@@ -66,7 +91,7 @@ async def timeline_from_folder(data: dict):
     )
 
     if not music_files:
-        return JSONResponse({"error": "음악 파일을 찾을 수 없습니다"}, status_code=400)
+        return JSONResponse({"error": "음악/영상 파일을 찾을 수 없습니다"}, status_code=400)
 
     timeline = []
     cumulative = 0.0

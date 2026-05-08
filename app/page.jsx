@@ -276,12 +276,12 @@ export default function TimelineExtractor() {
             <Music size={28} color={T.textSub} />
             <h1 style={{ fontSize: '28px', fontWeight: '700', color: T.text, margin: 0 }}>음악 타임라인 생성기</h1>
           </div>
-          <p style={{ fontSize: '13px', color: T.textMuted, margin: 0 }}>폴더 내 음악 파일을 이름순으로 정렬해 타임라인 자동 생성 · 반복 재생 지원</p>
+          <p style={{ fontSize: '13px', color: T.textMuted, margin: 0 }}>폴더 내 음악·영상 파일을 이름순으로 정렬해 타임라인 자동 생성 · 반복 재생 지원</p>
         </div>
 
         {/* ── Folder Input ── */}
         <div style={card}>
-          <label style={lbl}>📁 음악 폴더</label>
+          <label style={lbl}>📁 음악/영상 폴더</label>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button style={outlineBtn} onClick={browseFolder}>
               <FolderOpen size={14} /> 폴더 선택
@@ -298,7 +298,7 @@ export default function TimelineExtractor() {
               {loading ? '분석 중...' : '타임라인 생성'}
             </button>
           </div>
-          <p style={hint}>MP3, WAV, FLAC, M4A, AAC, OGG, WMA · 파일명 오름차순 정렬</p>
+          <p style={hint}>음악: MP3, WAV, FLAC, M4A, AAC, OGG, WMA · 영상: MP4, MKV, AVI, MOV, WMV, WebM · 파일명 오름차순 정렬</p>
         </div>
 
         {/* ── Settings ── */}
