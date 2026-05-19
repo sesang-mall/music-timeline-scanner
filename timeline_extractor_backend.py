@@ -153,9 +153,10 @@ def browse_folder():
     """시스템 폴더 선택 다이얼로그를 열고 선택된 경로를 반환"""
     try:
         root = tk.Tk()
+        root.attributes('-topmost', True)
         root.withdraw()
-        root.wm_attributes('-topmost', True)
-        path = filedialog.askdirectory(title="음악 폴더 선택")
+        root.update()
+        path = filedialog.askdirectory(parent=root, title="음악 폴더 선택")
         root.destroy()
         if path:
             return {"success": True, "path": path}
